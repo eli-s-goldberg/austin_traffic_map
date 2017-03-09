@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #map {
+            height: 100%;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+    var map;
+    var infowindow = null;
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: new google.maps.LatLng(30.310793, -97.776042),
+            mapTypeId: 'terrain'
+        });
+        infowindow = new google.maps.InfoWindow({
+            content: "holding..."
+        });
+    }
+    ;
+
+    jQuery.ajax({
+        url: "https://data.austintexas.gov/resource/8xxj-ec43.json",
+        type: "GET",
+        data: {}
+    }).done(function (data) {
+
+        var tooltipContentArray = []
+
+        for (var i = 0; i < data.length; i++) {
+            tooltipContentArray.push('<div id="content">' +
+                '<div id="siteNotice">' +
+                '</div>' +
+                '<h1 id="firstHeading" class="firstHeading">' + data[i].sr_description + ":" + '<br />' +
+                data[i].sr_location + '</h1>' +
+                '<div id="bodyContent"> ' + "Construction status: " + data[i].sr_status + '<br />' +
+                "Construction start date: " + data[i].close_date + '<br />' +
+                "Re-open date: " + data[i].date_and_time_of_reopening +
+                '</div>' +
+                '</div>');
+        }
+
+        for (i = 0; i < data.length; i++) {
+
+            var infowindow = new google.maps.InfoWindow({
+                content: tooltipContentArray[i]
+            });
+            var latlng = new google.maps.LatLng(lat = data[i].latitude_coordinate, lon = data[i].longitude_coordinate);
+            var marker = new google.maps.Marker({
+                title: ("'" + data[i].sr_location + "'"),
+                position: latlng,
+                map: map,
+                html: tooltipContentArray[i]
+            });
+
+            marker.setMap(map);
+
+            google.maps.event.addListener(marker, 'click', function () {
+                infowindow.open(map, marker);
+                infowindow.setContent(this.html);
+                infowindow.open(map, this);
+            });
+
+        }
+
+        function AutoCenter() {
+            //  Create a new viewpoint bound
+            var bounds = new google.maps.LatLngBounds();
+            //  Go through each...
+            $.each(markers, function (index, marker) {
+                bounds.extend(marker.position);
+            });
+            //  Fit these bounds to the map
+            map.fitBounds(bounds);
+        }
+    });
+
+
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR-API-KEY&callback=initMap">
+</script>
+</body>
+</html>
+
